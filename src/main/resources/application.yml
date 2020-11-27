@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: brms
+brms:
+  git:
+    dir: repo
