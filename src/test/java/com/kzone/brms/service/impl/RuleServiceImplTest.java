@@ -41,6 +41,11 @@ public class RuleServiceImplTest {
     private RuleSetRepository ruleSetRepository;
     @Mock
     private SourceCodeService sourceCodeService;
+    @Mock
+    private JavaCompilerService compilerService;
+
+    @Captor
+    private ArgumentCaptor<String> ruleSetName;
 
     private CreateRuleSetRequest request = new CreateRuleSetRequest();
     private CreateDomainRequest createDomainRequest = new CreateDomainRequest();
@@ -116,14 +121,15 @@ public class RuleServiceImplTest {
         ruleService.compileRuleSet("");
     }
 
-    @Captor
-    ArgumentCaptor<String> ruleSetName;
-
 
     @Test
     public void compileRuleSetTest(){
+        File callDirectory = new File("");
+        File sourceDirectory = new File("");
         Mockito.when(ruleSetRepository.findById(Mockito.anyString())).thenReturn(Optional.of(ruleSet));
-        Mockito.when(fileRepository.createClassDirectory(ruleSet.getName())).thenReturn(new File(""));
+        Mockito.when(fileRepository.createClassDirectory(ruleSet.getName())).thenReturn(callDirectory);
+        Mockito.when(fileRepository.getSourceDirectory(ruleSet.getName())).thenReturn(sourceDirectory);
+        Mockito.doNothing().when(compilerService).compileRuleSets(sourceDirectory);
         ruleService.compileRuleSet("");
         Mockito.verify(fileRepository).createClassDirectory(ruleSetName.capture());
         Mockito.verify(fileRepository).getSourceDirectory(ruleSetName.capture());
