@@ -1,5 +1,6 @@
 package com.kzone.brms.service.impl;
 
+import com.kzone.brms.exception.CompileException;
 import com.kzone.brms.service.JavaCompilerService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -15,13 +16,14 @@ import java.util.stream.Collectors;
 @Service
 public class JavaCompilerServiceImpl implements JavaCompilerService {
 
+    private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+
     @Override
     public void compileRuleSets(File ruleSet) {
         log.info("Start compiling rule set {}",ruleSet.getName());
         List<File> javSourceCodes = new ArrayList<>();
         javaSourceFiles(ruleSet, javSourceCodes);
 
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         List<String> compilerArguments = javSourceCodes.stream().map(File::getPath).collect(Collectors.toList());
         compilerArguments.add(0,"-d");
         compilerArguments.add(1,CLASS_DIR+File.separator+ruleSet.getName());
@@ -29,7 +31,7 @@ public class JavaCompilerServiceImpl implements JavaCompilerService {
         int exitCode = compiler.run(null, null, null, compilerArguments.toArray(new String[0]));
         if(exitCode != 0){
             log.error("Compiler returns exit code 0");
-            throw new RuntimeException("Failed to compile source files");
+            throw new CompileException("Failed to compile source files");
         }
 
     }
@@ -49,18 +51,4 @@ public class JavaCompilerServiceImpl implements JavaCompilerService {
         }
     }
 
-    private void javaClassFiles(File directory, List<File> files) {
-        // Get all class files from a directory.
-        log.debug("Fetching Class files from directory {}",directory.getName());
-        File[] fList = directory.listFiles();
-        if (fList != null) {
-            for (File file : fList) {
-                if (file.isFile() && file.getName().endsWith(".class")) {
-                    files.add(file);
-                } else if (file.isDirectory()) {
-                    javaClassFiles(file, files);
-                }
-            }
-        }
-    }
 }
