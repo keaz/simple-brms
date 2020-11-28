@@ -71,7 +71,7 @@ public class SourceCodeServiceImpl implements SourceCodeService {
         methodWriter.writeln_l("}");
     }
 
-    protected void closeClass(PicoWriter topWriter) {
+    private void closeClass(PicoWriter topWriter) {
         topWriter.writeln("");
         topWriter.writeln_l("}");
     }
