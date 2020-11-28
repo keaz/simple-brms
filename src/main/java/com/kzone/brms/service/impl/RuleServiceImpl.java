@@ -46,7 +46,6 @@ public class RuleServiceImpl implements RuleService {
             throw new GitTagAlreadyExists(String.format("Git tag %s already exists ",gitVersion));
         }
         fileRepository.createRuleSet(request);
-//        fileRepository.createClassDirectory(request.getRuleSetName());
         RuleSet save = ruleSetRepository.save(convertToRuleSet(request));
         try {
             gitRepository.commitAddPush(request.getRuleSetName(),"Added rule set " + request.getRuleSetName(), gitVersion);

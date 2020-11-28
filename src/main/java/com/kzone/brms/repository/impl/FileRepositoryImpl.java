@@ -24,6 +24,8 @@ import static com.kzone.brms.service.JavaCompilerService.CLASS;
 @Repository
 public class FileRepositoryImpl implements FileRepository {
 
+    private static final String PLACEHOLDER_ERROR_MESSAGE = "Failed to create placeholder file";
+
     @Autowired
     private final GitConfigs gitConfigs;
 
@@ -57,10 +59,14 @@ public class FileRepositoryImpl implements FileRepository {
         File packages = new File(ruleSetDir,packagePath);
         packages.mkdirs();
         try {
-            new File(packages,"placeholder.txt").createNewFile();
+            boolean newFile = new File(packages, "placeholder.txt").createNewFile();
+            if(!newFile){
+                log.error("Failed to create placeholder file not created in rule set {} ",ruleSetDir.getName());
+                throw new CommonFileException(PLACEHOLDER_ERROR_MESSAGE);
+            }
         } catch (IOException e) {
-            log.error("Failed to create placeholder file",e);
-            throw new CommonFileException("Failed to create placeholder file");
+            log.error(PLACEHOLDER_ERROR_MESSAGE,e);
+            throw new CommonFileException(PLACEHOLDER_ERROR_MESSAGE);
         }
     }
 
@@ -115,8 +121,7 @@ public class FileRepositoryImpl implements FileRepository {
     @Override
     public File getSourceDirectory(String ruleSetName) {
         File gitRepoDir = new File(SOURCE_DIR, gitConfigs.getDir());
-        File ruleSetDirectory = new File(gitRepoDir,ruleSetName);
-        return ruleSetDirectory;
+        return new File(gitRepoDir,ruleSetName);
     }
 
 
