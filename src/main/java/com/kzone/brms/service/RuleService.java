@@ -15,5 +15,7 @@ public interface RuleService {
      */
     CreateRuleSetResponse createRuleSet(CreateRuleSetRequest request);
 
-    CreateDomainResponse createDomainObject(CreateDomainRequest request);
+    CreateDomainResponse createDomainObject(String ruleId,CreateDomainRequest request);
+
+    void compileRuleSet(String ruleId);
 }

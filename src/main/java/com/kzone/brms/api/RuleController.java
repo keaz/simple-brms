@@ -8,10 +8,7 @@ import com.kzone.brms.service.RuleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/v1/rule")
@@ -22,12 +19,18 @@ public class RuleController {
 
     @PostMapping
     public ResponseEntity<CreateRuleSetResponse> createRuleSet(@RequestBody CreateRuleSetRequest request){
-        return new ResponseEntity<CreateRuleSetResponse>(ruleService.createRuleSet(request), HttpStatus.CREATED);
+        return new ResponseEntity<>(ruleService.createRuleSet(request), HttpStatus.CREATED);
     }
 
-    @PostMapping
-    public ResponseEntity<CreateDomainResponse> createDomain(@RequestBody CreateDomainRequest request){
-        return new ResponseEntity<CreateDomainResponse>(ruleService.createDomainObject(request), HttpStatus.CREATED);
+    @PostMapping("{ruleId}/domain")
+    public ResponseEntity<CreateDomainResponse> createDomain(@PathVariable("ruleId") String ruleId, @RequestBody CreateDomainRequest request){
+        return new ResponseEntity<>(ruleService.createDomainObject(ruleId,request), HttpStatus.CREATED);
+    }
+
+    @PostMapping("{ruleId}/compile")
+    public ResponseEntity<Void> compileRuleSet(@PathVariable("ruleId") String ruleId){
+        ruleService.compileRuleSet(ruleId);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
 

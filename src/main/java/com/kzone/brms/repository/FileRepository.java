@@ -36,4 +36,10 @@ public interface FileRepository {
      */
     void deleteClassDirectory(String ruleSetName);
 
+
+    void getWriteSource(String ruleSetName, String packageName, String className,String sourceCode);
+
+
+    File getSourceDirectory(String ruleSetName);
+
 }

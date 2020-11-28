@@ -3,6 +3,7 @@ package com.kzone.brms.repository.impl;
 import com.kzone.brms.config.GitConfigs;
 import com.kzone.brms.dto.request.CreateRuleSetRequest;
 import com.kzone.brms.exception.CommonFileException;
+import com.kzone.brms.exception.FailedToCreateSourceFile;
 import com.kzone.brms.exception.RuleSetExistsException;
 import com.kzone.brms.repository.FileRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +29,7 @@ public class FileRepositoryImpl implements FileRepository {
 
     @Override
     public File createRuleSet(CreateRuleSetRequest request) {
-        File gitRepoDir = new File(SOURCE_DIR, gitConfigs.getDir());
-        File ruleSetDir = new File(gitRepoDir, request.getRuleSetName());
+        File ruleSetDir = getSourceDirectory(request.getRuleSetName());
         if (ruleSetDir.exists()) {
             log.info("Rule set {} already exists",request.getRuleSetName());
             throw new RuleSetExistsException("Rule set already exists");
@@ -83,7 +83,6 @@ public class FileRepositoryImpl implements FileRepository {
         if(!ruleSetDir.exists()){
             ruleSetDir.mkdirs();
         }
-
         return ruleSetDir;
     }
 
@@ -97,5 +96,28 @@ public class FileRepositoryImpl implements FileRepository {
             throw new CommonFileException("Failed to delete class directory");
         }
     }
+
+    public void getWriteSource(String ruleSetName, String packageName, String className,String sourceCode){
+
+        File ruleSetDirectory = getSourceDirectory(ruleSetName);
+        String packagePath = packageName.replace('.', '/');
+        File packageDirectory = new File(ruleSetDirectory,packagePath);
+        File javaFile = new File(packageDirectory, className + ".java");
+
+        try(FileWriter fileWriter = new FileWriter(javaFile)){
+            fileWriter.write(sourceCode);
+        }catch (IOException e){
+            throw new FailedToCreateSourceFile("Failed to create source file");
+        }
+
+    }
+
+    @Override
+    public File getSourceDirectory(String ruleSetName) {
+        File gitRepoDir = new File(SOURCE_DIR, gitConfigs.getDir());
+        File ruleSetDirectory = new File(gitRepoDir,ruleSetName);
+        return ruleSetDirectory;
+    }
+
 
 }
