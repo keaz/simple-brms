@@ -44,8 +44,7 @@ public class FileRepositoryImpl implements FileRepository {
 
     @Override
     public void deleteRuleSet(String ruleSetName) {
-        File gitRepoDir = new File(SOURCE_DIR, gitConfigs.getDir());
-        File ruleSetDir = new File(gitRepoDir, ruleSetName);
+        File ruleSetDir = getSourceDirectory(ruleSetName);
         try {
             Files.deleteIfExists(ruleSetDir.toPath());
         } catch (IOException e) {
@@ -54,23 +53,28 @@ public class FileRepositoryImpl implements FileRepository {
         }
     }
 
-    private void createPackages(File ruleSetDir,String packageName){
-        String packagePath = packageName.replace('.', '/');
-        File packages = new File(ruleSetDir,packagePath);
+    protected void createPackages(File ruleSetDir,String packageName){
+        File packages = getPackageDirectory(packageName, ruleSetDir);
         packages.mkdirs();
+
+        boolean newFile = createPlaceholder(packages);
+        if(!newFile){
+            log.error("Failed to create placeholder file not created in rule set {} ",ruleSetDir.getName());
+            throw new CommonFileException(PLACEHOLDER_ERROR_MESSAGE);
+        }
+
+    }
+
+    protected boolean createPlaceholder(File packages){
         try {
-            boolean newFile = new File(packages, "placeholder.txt").createNewFile();
-            if(!newFile){
-                log.error("Failed to create placeholder file not created in rule set {} ",ruleSetDir.getName());
-                throw new CommonFileException(PLACEHOLDER_ERROR_MESSAGE);
-            }
+            return new File(packages, "placeholder.txt").createNewFile();
         } catch (IOException e) {
             log.error(PLACEHOLDER_ERROR_MESSAGE,e);
             throw new CommonFileException(PLACEHOLDER_ERROR_MESSAGE);
         }
     }
 
-    private void createReadMe(File ruleSetDir,CreateRuleSetRequest request){
+    protected void createReadMe(File ruleSetDir,CreateRuleSetRequest request){
         File readMe = new File(ruleSetDir, README_FILE);
         try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(readMe))){
             bufferedWriter.write("#" + request.getRuleSetName());
@@ -85,7 +89,7 @@ public class FileRepositoryImpl implements FileRepository {
 
     @Override
     public File createClassDirectory(String ruleSetName) {
-        File ruleSetDir = new File(CLASS, ruleSetName);
+        File ruleSetDir = getClassClassDirectory(ruleSetName);
         if(!ruleSetDir.exists()){
             ruleSetDir.mkdirs();
         }
@@ -94,7 +98,7 @@ public class FileRepositoryImpl implements FileRepository {
 
     @Override
     public void deleteClassDirectory(String ruleSetName) {
-        File ruleSetDir = new File(CLASS, ruleSetName);
+        File ruleSetDir = getClassClassDirectory(ruleSetName);
         try {
             Files.deleteIfExists(ruleSetDir.toPath());
         } catch (IOException e) {
@@ -103,12 +107,15 @@ public class FileRepositoryImpl implements FileRepository {
         }
     }
 
+    protected File getClassClassDirectory(String ruleSetName){
+        return new File(CLASS, ruleSetName);
+    }
+
+    @Override
     public void getWriteSource(String ruleSetName, String packageName, String className,String sourceCode){
 
         File ruleSetDirectory = getSourceDirectory(ruleSetName);
-        String packagePath = packageName.replace('.', '/');
-        File packageDirectory = new File(ruleSetDirectory,packagePath);
-        File javaFile = new File(packageDirectory, className + ".java");
+        File javaFile = getJavaFile(packageName, className, ruleSetDirectory);
 
         try(FileWriter fileWriter = new FileWriter(javaFile)){
             fileWriter.write(sourceCode);
@@ -116,6 +123,18 @@ public class FileRepositoryImpl implements FileRepository {
             throw new FailedToCreateSourceFile("Failed to create source file");
         }
 
+    }
+
+
+    protected File getJavaFile(String packageName, String className, File ruleSetDirectory) {
+        File packageDirectory = getPackageDirectory(packageName, ruleSetDirectory);
+        File javaFile = new File(packageDirectory, className + ".java");
+        return javaFile;
+    }
+
+    protected File getPackageDirectory(String packageName, File ruleSetDirectory) {
+        String packagePath = packageName.replace('.', '/');
+        return new File(ruleSetDirectory, packagePath);
     }
 
     @Override
