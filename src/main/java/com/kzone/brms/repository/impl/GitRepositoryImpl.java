@@ -46,12 +46,12 @@ public class GitRepositoryImpl implements GitRepository {
         }
     }
 
-    private void addAll(Git git) throws GitAPIException {
+    protected void addAll(Git git) throws GitAPIException {
         AddCommand add = git.add();
         add.addFilepattern(".").call();
     }
 
-    private Git getGit() {
+    protected Git getGit() {
         File file = new File(SOURCE_DIR, gitConfigs.getDir());
         try {
             Git git = Git.open(file);
@@ -78,13 +78,13 @@ public class GitRepositoryImpl implements GitRepository {
         }
     }
 
-    private void push(Git git) throws GitAPIException {
+    protected void push(Git git) throws GitAPIException {
         PushCommand push = git.push();
         push.setCredentialsProvider(new UsernamePasswordCredentialsProvider(gitConfigs.getUsername(), gitConfigs.getToken()));
         push.setPushAll().setPushTags().call();
     }
 
-    private void createCommit(String message, Git git) throws GitAPIException {
+    protected void createCommit(String message, Git git) throws GitAPIException {
         CommitCommand commit = git.commit();
         commit.setAuthor("brms service", "kasun.ranasingh@icloud.com");
         commit.setMessage(message);
@@ -92,7 +92,7 @@ public class GitRepositoryImpl implements GitRepository {
         commit.call();
     }
 
-    private void createTag(String version, String message, Git git) throws GitAPIException {
+    protected void createTag(String version, String message, Git git) throws GitAPIException {
         TagCommand tag = git.tag();
         tag.setName(version);
         tag.setMessage(message);
@@ -111,7 +111,7 @@ public class GitRepositoryImpl implements GitRepository {
         }
     }
 
-    private boolean gitTaxExists(String tag, Git git) throws GitAPIException {
+    protected boolean gitTaxExists(String tag, Git git) throws GitAPIException {
         List<Ref> tags = git.tagList().call();
         return tags.stream().anyMatch(ref -> ref.getName().contentEquals("refs/tags/" + tag));
     }

@@ -168,12 +168,24 @@ public class FileRepositoryImplTest {
     }
 
     @Test(expected = CommonFileException.class)
-    public void createPackagesTest(){
+    public void createPackagesErrorTest(){
         Mockito.doReturn(false).when(fileRepository).createPlaceholder(ruleSetDir);
         Mockito.doReturn(ruleSetDir).when(fileRepository).getPackageDirectory(request.getPackageName(),ruleSetDir);
         Mockito.when(ruleSetDir.mkdirs()).thenReturn(true);
 
         fileRepository.createPackages(ruleSetDir,request.getPackageName());
+    }
+
+    @Test
+    public void createPackagesTest(){
+        Mockito.doReturn(true).when(fileRepository).createPlaceholder(ruleSetDir);
+        Mockito.doReturn(ruleSetDir).when(fileRepository).getPackageDirectory(request.getPackageName(),ruleSetDir);
+        Mockito.when(ruleSetDir.mkdirs()).thenReturn(true);
+
+        fileRepository.createPackages(ruleSetDir,request.getPackageName());
+        Mockito.verify(fileRepository).createPlaceholder(fileArgumentCaptor.capture());
+
+        Assert.assertEquals(ruleSetDir,fileArgumentCaptor.getValue());
     }
 
     @Test(expected = CommonFileException.class)
