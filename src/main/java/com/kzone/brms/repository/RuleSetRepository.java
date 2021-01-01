@@ -6,4 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RuleSetRepository extends JpaRepository<RuleSet,String> {
+
+    boolean existsByName(String name);
+
 }

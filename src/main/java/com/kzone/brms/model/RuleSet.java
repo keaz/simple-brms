@@ -18,7 +18,7 @@ public class RuleSet extends BaseModel{
     @Column(name = "rule_set_name",nullable = false,unique = true)
     private String name;
 
-    @Column(name = "package",nullable = false,unique = true)
+    @Column(name = "package",nullable = false,unique = false)
     private String packageName;
 
     @Column(name = "description",nullable = false)

@@ -3,7 +3,9 @@ package com.kzone.brms.service;
 import com.kzone.brms.dto.request.CreateDomainRequest;
 import com.kzone.brms.dto.request.CreateRuleSetRequest;
 import com.kzone.brms.dto.response.CreateDomainResponse;
-import com.kzone.brms.dto.response.CreateRuleSetResponse;
+import com.kzone.brms.dto.response.RuleSetResponse;
+
+import java.util.List;
 
 public interface RuleService {
 
@@ -13,9 +15,16 @@ public interface RuleService {
      * @param request to create new rule set
      * @return the response
      */
-    CreateRuleSetResponse createRuleSet(CreateRuleSetRequest request);
+    RuleSetResponse createRuleSet(CreateRuleSetRequest request);
 
     CreateDomainResponse createDomainObject(String ruleId,CreateDomainRequest request);
 
     void compileRuleSet(String ruleId);
+
+    /**
+     * Select all active rule sets
+     * @return list of Rule Sets
+     */
+    List<RuleSetResponse> getAll();
+
 }

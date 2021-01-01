@@ -5,11 +5,11 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class CreateRuleSetResponse {
+public class RuleSetResponse {
 
     private String id;
     private String ruleSetName;
-    private String packageName;
+    private String description;
 
 
 }

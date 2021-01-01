@@ -3,23 +3,31 @@ package com.kzone.brms.api;
 import com.kzone.brms.dto.request.CreateDomainRequest;
 import com.kzone.brms.dto.request.CreateRuleSetRequest;
 import com.kzone.brms.dto.response.CreateDomainResponse;
-import com.kzone.brms.dto.response.CreateRuleSetResponse;
+import com.kzone.brms.dto.response.RuleSetResponse;
 import com.kzone.brms.service.RuleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/v1/rule")
+@CrossOrigin("*")
 @RequiredArgsConstructor
 public class RuleController {
 
     public final RuleService ruleService;
 
     @PostMapping
-    public ResponseEntity<CreateRuleSetResponse> createRuleSet(@RequestBody CreateRuleSetRequest request){
+    public ResponseEntity<RuleSetResponse> createRuleSet(@RequestBody CreateRuleSetRequest request){
         return new ResponseEntity<>(ruleService.createRuleSet(request), HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<RuleSetResponse>> getAll(){
+        return new ResponseEntity<>(ruleService.getAll(), HttpStatus.OK);
     }
 
     @PostMapping("{ruleId}/domain")

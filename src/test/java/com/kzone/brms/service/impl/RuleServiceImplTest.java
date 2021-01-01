@@ -5,11 +5,8 @@ import com.kzone.brms.dto.request.CreateDomainRequest;
 import com.kzone.brms.dto.request.CreateRuleSetRequest;
 import com.kzone.brms.dto.request.DomainObject;
 import com.kzone.brms.dto.response.CreateDomainResponse;
-import com.kzone.brms.dto.response.CreateRuleSetResponse;
-import com.kzone.brms.exception.CommonRuleCreateException;
-import com.kzone.brms.exception.GenericGitException;
-import com.kzone.brms.exception.GitTagAlreadyExists;
-import com.kzone.brms.exception.RuleSetNotFoundException;
+import com.kzone.brms.dto.response.RuleSetResponse;
+import com.kzone.brms.exception.*;
 import com.kzone.brms.model.RuleSet;
 import com.kzone.brms.repository.FileRepository;
 import com.kzone.brms.repository.GitRepository;
@@ -24,9 +21,7 @@ import org.mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RuleServiceImplTest {
@@ -57,7 +52,7 @@ public class RuleServiceImplTest {
         request.setDescription("Rule Set description");
         request.setPackageName("com.brms.rules");
         ruleSet = new RuleSet(request.getRuleSetName(), request.getPackageName(), request.getDescription());
-
+        ruleSet.setId(UUID.randomUUID().toString());
         createDomainRequest.setMessage("Test Domain Object");
         DomainObject domainObject = new DomainObject();
         domainObject.setName("TestDomain");
@@ -70,8 +65,15 @@ public class RuleServiceImplTest {
         createDomainRequest.setDomainObject(domainObject);
     }
 
+    @Test(expected = RuleSetExistsException.class)
+    public void createRuleSetExistsTest(){
+        Mockito.when(ruleSetRepository.existsByName(Mockito.anyString())).thenReturn(true);
+        ruleService.createRuleSet(request);
+    }
+
     @Test(expected = GitTagAlreadyExists.class)
     public void createRuleSetGitTagExistsTest(){
+        Mockito.when(ruleSetRepository.existsByName(Mockito.anyString())).thenReturn(false);
         Mockito.when(gitRepository.isGitTagExists(Mockito.anyString())).thenReturn(true);
         ruleService.createRuleSet(request);
     }
@@ -94,8 +96,10 @@ public class RuleServiceImplTest {
 
 
         Mockito.when(ruleSetRepository.save(ruleSet)).thenReturn(ruleSet);
-        CreateRuleSetResponse expected = ruleService.createRuleSet(request);
+        RuleSetResponse expected = ruleService.createRuleSet(request);
         Assert.assertEquals(ruleSet.getName(),expected.getRuleSetName());
+        Assert.assertEquals(ruleSet.getDescription(),expected.getDescription());
+        Assert.assertFalse(expected.getId().isEmpty());
     }
 
     @Test(expected = RuleSetNotFoundException.class)
@@ -138,5 +142,23 @@ public class RuleServiceImplTest {
         Assert.assertEquals(ruleSet.getName(),allValues.get(1));
 
     }
+
+
+    @Test
+    public void getAllEmptyResultTest(){
+        Mockito.when(ruleSetRepository.findAll()).thenReturn(Collections.emptyList());
+        List<RuleSetResponse> expected = ruleService.getAll();
+        Assert.assertTrue(expected.isEmpty());
+    }
+
+    @Test
+    public void getAllTest(){
+        RuleSet ruleSetResponse = new RuleSet("","","");
+
+        Mockito.when(ruleSetRepository.findAll()).thenReturn(Arrays.asList(ruleSetResponse));
+        List<RuleSetResponse> expected = ruleService.getAll();
+        Assert.assertFalse("Result is not empty",expected.isEmpty());
+    }
+
 
 }
