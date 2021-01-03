@@ -130,7 +130,7 @@ public class RuleServiceImplTest {
         Mockito.when(ruleSetRepository.findById(Mockito.anyString())).thenReturn(Optional.of(ruleSet));
         Mockito.when(fileRepository.createClassDirectory(ruleSet.getName())).thenReturn(callDirectory);
         Mockito.when(fileRepository.getSourceDirectory(ruleSet.getName())).thenReturn(sourceDirectory);
-        Mockito.doNothing().when(compilerService).compileRuleSets(sourceDirectory,Collections.EMPTY_LIST);
+        Mockito.when(compilerService.compileRuleSets(sourceDirectory,Collections.EMPTY_LIST)).thenReturn(true);
         ruleService.compileRuleSet("");
         Mockito.verify(fileRepository).createClassDirectory(ruleSetName.capture());
         Mockito.verify(fileRepository).getSourceDirectory(ruleSetName.capture());

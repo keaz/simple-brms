@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,7 +18,7 @@ public class JavaCompilerServiceImpl implements JavaCompilerService {
     private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
     @Override
-    public void compileRuleSets(File ruleSet,List<File> javSourceCodes) {
+    public boolean compileRuleSets(File ruleSet,List<File> javSourceCodes) {
         log.info("Start compiling rule set {}",ruleSet.getName());
 
         List<String> compilerArguments = javSourceCodes.stream().map(File::getPath).collect(Collectors.toList());
@@ -31,6 +30,8 @@ public class JavaCompilerServiceImpl implements JavaCompilerService {
             log.error("Compiler returns exit code 0");
             throw new CompileException("Failed to compile source files");
         }
+
+        return true;
 
     }
 

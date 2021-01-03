@@ -1,6 +1,7 @@
 package com.kzone.brms.service.impl;
 
 import com.kzone.brms.exception.CompileException;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -9,6 +10,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.tools.JavaCompiler;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 
 import static com.kzone.brms.service.JavaCompilerService.CLASS_DIR;
@@ -42,23 +44,15 @@ public class JavaCompilerServiceImplTests {
     @Test(expected = CompileException.class)
     public void compileRuleSetsCompileFailedTest(){
         Mockito.when(ruleSet.getName()).thenReturn("Test");
-        Mockito.when(ruleSet.listFiles()).thenReturn(fList);
-        Mockito.when(sourceFile.isFile()).thenReturn(true);
-        Mockito.when(sourceFile.getName()).thenReturn("RuleDao.java");
         Mockito.when(sourceFile.getPath()).thenReturn("RuleDao.java");
         Mockito.when(javaCompiler.run(null,null,null,compilerArguments)).thenReturn(1);
-        compilerService.compileRuleSets(ruleSet, Collections.EMPTY_LIST);
+        compilerService.compileRuleSets(ruleSet, Arrays.asList(sourceFile));
     }
 
     @Test
     public void compileRuleSetsTest(){
         Mockito.when(ruleSet.getName()).thenReturn("Test");
-        Mockito.when(ruleSet.listFiles()).thenReturn(fList);
-        Mockito.when(sourceFile.isFile()).thenReturn(true);
-        Mockito.when(sourceFile.getName()).thenReturn("RuleDao.java");
-        Mockito.when(sourceFile.getPath()).thenReturn("RuleDao.java");
-        Mockito.when(javaCompiler.run(null,null,null,compilerArguments)).thenReturn(0);
-        compilerService.compileRuleSets(ruleSet,Collections.EMPTY_LIST);
-
+        boolean compiled = compilerService.compileRuleSets(ruleSet, Collections.EMPTY_LIST);
+        Assert.assertTrue(compiled);
     }
 }

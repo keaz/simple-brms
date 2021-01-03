@@ -8,6 +8,6 @@ public interface JavaCompilerService {
     String CLASS_DIR = "compiled";
     File CLASS = new File(CLASS_DIR);
 
-    void compileRuleSets(File ruleSet, List<File> javSourceCodes);
+    boolean compileRuleSets(File ruleSet, List<File> javSourceCodes);
 
 }
