@@ -14,6 +14,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
@@ -30,8 +31,9 @@ import java.util.stream.Collectors;
  * Hello world!
  */
 @RequiredArgsConstructor
-@SpringBootApplication
 @Log4j2
+@SpringBootApplication
+@EnableJpaAuditing
 public class App implements ApplicationListener<ApplicationReadyEvent> {
 
 

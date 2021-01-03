@@ -3,6 +3,7 @@ package com.kzone.brms.repository;
 import com.kzone.brms.dto.request.CreateRuleSetRequest;
 
 import java.io.File;
+import java.util.List;
 
 public interface FileRepository {
 
@@ -35,5 +36,18 @@ public interface FileRepository {
      * @return
      */
     void deleteClassDirectory(String ruleSetName);
+
+
+    void getWriteSource(String ruleSetName, String packageName, String className,String sourceCode);
+
+
+    File getSourceDirectory(String ruleSetName);
+
+    /**
+     * Get all the source files in the rule set
+     * @param directory to search rule sets
+     * @return list of source files
+     */
+    List<File> getJavaSourceFiles(File directory);
 
 }

@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.NoFilepatternException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,57 +28,93 @@ public class GitRepositoryImpl implements GitRepository {
     private final GitConfigs gitConfigs;
 
     @Override
-    public void commitAddPush(String ruleSetName,String message, String version) throws GitTagAlreadyExists{
-        File file = new File(SOURCE_DIR, gitConfigs.getDir());
-
+    public void commitAddPush(String ruleSetName, String message, String version) {
         try {
-            Git git = Git.open(file);
-            git.pull();
-            List<Ref> tags = git.tagList().call();
-            boolean hasTag = tags.stream().anyMatch(ref -> ref.getName().contains(version));
-            if(hasTag){
-                log.info("Git Tag {} already exists",version);
-                throw new GitTagAlreadyExists(String.format("Git tag %s already exists ",version));
+            Git git = getGit();
+            if (gitTaxExists(version, git)) {
+                log.info("Git Tag {} already exists", version);
+                throw new GitTagAlreadyExists(String.format("Git tag %s already exists ", version));
             }
-            AddCommand add = git.add();
-            add.addFilepattern(".").call();
-            CommitCommand commit = git.commit();
-            commit.setAuthor("brms service","kasun.ranasingh@icloud.com");
-            commit.setMessage(message);
-            commit.setSign(false);
-            commit.call();
-            TagCommand tag = git.tag();
-            tag.setName(version);
-            tag.setMessage(message);
-            tag.setSigned(false);
-            tag.call();
-            PushCommand push = git.push();
-            push.setCredentialsProvider(new UsernamePasswordCredentialsProvider(gitConfigs.getUsername(), gitConfigs.getToken()));
-            push.setPushAll().setPushTags().call();
+            addAll(git);
+            createCommit(message, git);
+            createTag(version, message, git);
+            push(git);
 
-        } catch (IOException e) {
-            log.error("Failed to open git repo");
-            throw new GitTagAlreadyExists(e.getMessage());
         } catch (GitAPIException e) {
             log.error("Error searching git tags");
             throw new GenericGitException(e);
         }
+    }
+
+    protected void addAll(Git git) throws GitAPIException {
+        AddCommand add = git.add();
+        add.addFilepattern(".").call();
+    }
+
+    protected Git getGit() {
+        File file = new File(SOURCE_DIR, gitConfigs.getDir());
+        try {
+            Git git = Git.open(file);
+            log.debug("Pulling repo in to {}", gitConfigs.getDir());
+            git.pull();
+            return git;
+        } catch (IOException e) {
+            log.error("Failed to open the git repo", e);
+            throw new GenericGitException("Failed to open the git repo");
+        }
+
     }
 
     @Override
-    public boolean isGitTagExists(String tag) throws GitTagAlreadyExists {
-        File file = new File(SOURCE_DIR, gitConfigs.getDir());
+    public void commitAddPush(String ruleSetName, String message) {
         try {
-            Git git = Git.open(file);
-            git.pull();
-            List<Ref> tags = git.tagList().call();
-            return tags.stream().anyMatch(ref -> ref.getName().contentEquals("refs/tags/"+tag));
-        } catch (IOException e) {
-            log.error("Failed to open git repo");
-            throw new GenericGitException(e);
+            Git git = getGit();
+            addAll(git);
+            createCommit(message, git);
+            push(git);
+        } catch (GitAPIException e) {
+            log.error("Failed to execute git operation", e);
+            throw new GenericGitException(String.format("Failed to execute git operation %s",e.getMessage()));
+        }
+    }
+
+    protected void push(Git git) throws GitAPIException {
+        PushCommand push = git.push();
+        push.setCredentialsProvider(new UsernamePasswordCredentialsProvider(gitConfigs.getUsername(), gitConfigs.getToken()));
+        push.setPushAll().setPushTags().call();
+    }
+
+    protected void createCommit(String message, Git git) throws GitAPIException {
+        CommitCommand commit = git.commit();
+        commit.setAuthor("brms service", "kasun.ranasingh@icloud.com");
+        commit.setMessage(message);
+        commit.setSign(false);
+        commit.call();
+    }
+
+    protected void createTag(String version, String message, Git git) throws GitAPIException {
+        TagCommand tag = git.tag();
+        tag.setName(version);
+        tag.setMessage(message);
+        tag.setSigned(false);
+        tag.call();
+    }
+
+    @Override
+    public boolean isGitTagExists(String tag) {
+        try {
+            Git git = getGit();
+            return gitTaxExists(tag, git);
         } catch (GitAPIException e) {
             log.error("Error searching git tags");
             throw new GenericGitException(e);
         }
     }
+
+    protected boolean gitTaxExists(String tag, Git git) throws GitAPIException {
+        List<Ref> tags = git.tagList().call();
+        return tags.stream().anyMatch(ref -> ref.getName().contentEquals("refs/tags/" + tag));
+    }
+
+
 }
