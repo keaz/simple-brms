@@ -10,6 +10,7 @@ public class RuleSetResponse {
     private String id;
     private String ruleSetName;
     private String description;
+    private String packageName;
 
 
 }

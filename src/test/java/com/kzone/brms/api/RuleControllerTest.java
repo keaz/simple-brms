@@ -37,12 +37,13 @@ public class RuleControllerTest {
     public void setup() {
         String ruleName = "Rule Set";
         String packageName = "com.kzone.brms";
+        String description = "Test Description";
         request = new CreateRuleSetRequest();
         request.setRuleSetName(ruleName);
         request.setPackageName(packageName);
         request.setDescription("This is a description");
 
-        ruleSetResponse = new RuleSetResponse(UUID.randomUUID().toString(), ruleName, packageName);
+        ruleSetResponse = new RuleSetResponse(UUID.randomUUID().toString(), ruleName, description,packageName);
     }
 
 //    @Test

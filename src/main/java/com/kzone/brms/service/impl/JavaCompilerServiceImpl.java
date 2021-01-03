@@ -19,10 +19,8 @@ public class JavaCompilerServiceImpl implements JavaCompilerService {
     private JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
     @Override
-    public void compileRuleSets(File ruleSet) {
+    public void compileRuleSets(File ruleSet,List<File> javSourceCodes) {
         log.info("Start compiling rule set {}",ruleSet.getName());
-        List<File> javSourceCodes = new ArrayList<>();
-        javaSourceFiles(ruleSet, javSourceCodes);
 
         List<String> compilerArguments = javSourceCodes.stream().map(File::getPath).collect(Collectors.toList());
         compilerArguments.add(0,"-d");
@@ -34,21 +32,6 @@ public class JavaCompilerServiceImpl implements JavaCompilerService {
             throw new CompileException("Failed to compile source files");
         }
 
-    }
-
-    private void javaSourceFiles(File directory, List<File> files) {
-        // Get all java files from a directory.
-        log.debug("Fetching Source files from directory {}",directory.getName());
-        File[] fList = directory.listFiles();
-        if (fList != null) {
-            for (File file : fList) {
-                if (file.isFile() && file.getName().endsWith(".java")) {
-                    files.add(file);
-                } else if (file.isDirectory()) {
-                    javaSourceFiles(file, files);
-                }
-            }
-        }
     }
 
 }

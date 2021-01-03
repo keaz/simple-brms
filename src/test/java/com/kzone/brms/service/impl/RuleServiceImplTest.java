@@ -1,9 +1,6 @@
 package com.kzone.brms.service.impl;
 
-import com.kzone.brms.dto.request.CreateDomainAttributeRequest;
-import com.kzone.brms.dto.request.CreateDomainRequest;
-import com.kzone.brms.dto.request.CreateRuleSetRequest;
-import com.kzone.brms.dto.request.DomainObject;
+import com.kzone.brms.dto.request.*;
 import com.kzone.brms.dto.response.CreateDomainResponse;
 import com.kzone.brms.dto.response.RuleSetResponse;
 import com.kzone.brms.exception.*;
@@ -133,7 +130,7 @@ public class RuleServiceImplTest {
         Mockito.when(ruleSetRepository.findById(Mockito.anyString())).thenReturn(Optional.of(ruleSet));
         Mockito.when(fileRepository.createClassDirectory(ruleSet.getName())).thenReturn(callDirectory);
         Mockito.when(fileRepository.getSourceDirectory(ruleSet.getName())).thenReturn(sourceDirectory);
-        Mockito.doNothing().when(compilerService).compileRuleSets(sourceDirectory);
+        Mockito.doNothing().when(compilerService).compileRuleSets(sourceDirectory,Collections.EMPTY_LIST);
         ruleService.compileRuleSet("");
         Mockito.verify(fileRepository).createClassDirectory(ruleSetName.capture());
         Mockito.verify(fileRepository).getSourceDirectory(ruleSetName.capture());
@@ -160,5 +157,51 @@ public class RuleServiceImplTest {
         Assert.assertFalse("Result is not empty",expected.isEmpty());
     }
 
+    @Test(expected = RuleSetNotFoundException.class)
+    public void updateRuleSetNotFoundTest(){
+        Mockito.when(ruleSetRepository.findById(Mockito.anyString())).thenReturn(Optional.empty());
+        ruleService.updateRuleSet("1",Mockito.any(UpdateRuleSetRequest.class));
+    }
+
+    @Test(expected = RuleUpdateException.class)
+    public void updateRuleSetUpdateExceptionTest(){
+        File source = new File("");
+        Mockito.when(ruleSetRepository.findById(Mockito.anyString())).thenReturn(Optional.of(ruleSet));
+        Mockito.when(fileRepository.getSourceDirectory(Mockito.anyString())).thenReturn(source);
+        Mockito.when(fileRepository.getJavaSourceFiles(Mockito.any(File.class))).thenReturn(Arrays.asList(source));
+        UpdateRuleSetRequest updateRuleSetRequest = new UpdateRuleSetRequest();
+        updateRuleSetRequest.setPackageName("com.test");
+        ruleService.updateRuleSet("1",updateRuleSetRequest);
+    }
+
+    @Test
+    public void updateRuleSetTest(){
+        Mockito.when(ruleSetRepository.findById(Mockito.anyString())).thenReturn(Optional.of(ruleSet));
+        Mockito.when(fileRepository.getSourceDirectory(Mockito.anyString())).thenReturn(new File(""));
+        Mockito.when(fileRepository.getJavaSourceFiles(Mockito.any(File.class))).thenReturn(Collections.EMPTY_LIST);
+        Mockito.when(ruleSetRepository.save(ruleSet)).thenReturn(ruleSet);
+        UpdateRuleSetRequest updateRuleSetRequest = new UpdateRuleSetRequest();
+        updateRuleSetRequest.setPackageName("com.test");
+        updateRuleSetRequest.setDescription("Test Description");
+        RuleSetResponse ruleSetResponse = ruleService.updateRuleSet("1", updateRuleSetRequest);
+        Assert.assertEquals(ruleSet.getId(),ruleSetResponse.getId());
+        Assert.assertEquals(ruleSet.getDescription(),ruleSetResponse.getDescription());
+        Assert.assertEquals(ruleSet.getPackageName(),ruleSetResponse.getPackageName());
+    }
+
+    @Test(expected = RuleSetNotFoundException.class)
+    public void getByIdSetNotFoundTest(){
+        Mockito.when(ruleSetRepository.findById(Mockito.anyString())).thenReturn(Optional.empty());
+        ruleService.getById("1");
+    }
+
+    @Test
+    public void getByIdTest(){
+        Mockito.when(ruleSetRepository.findById(Mockito.anyString())).thenReturn(Optional.of(ruleSet));
+        RuleSetResponse actual = ruleService.getById("1");
+        Assert.assertEquals(ruleSet.getId(),actual.getId());
+        Assert.assertEquals(ruleSet.getDescription(),actual.getDescription());
+        Assert.assertEquals(ruleSet.getPackageName(),actual.getPackageName());
+    }
 
 }

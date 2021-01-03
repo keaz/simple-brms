@@ -16,6 +16,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.kzone.brms.service.JavaCompilerService.CLASS;
 
@@ -143,5 +145,26 @@ public class FileRepositoryImpl implements FileRepository {
         return new File(gitRepoDir,ruleSetName);
     }
 
+    @Override
+    public List<File> getJavaSourceFiles(File directory) {
+        List<File> sourceFiles =  new ArrayList<>();
+        javaSourceFiles(directory,sourceFiles);
+        return sourceFiles;
+    }
 
+
+    private void javaSourceFiles(File directory, List<File> files) {
+        // Get all java files from a directory.
+        log.debug("Fetching Source files from directory {}",directory.getName());
+        File[] fList = directory.listFiles();
+        if (fList != null) {
+            for (File file : fList) {
+                if (file.isFile() && file.getName().endsWith(".java")) {
+                    files.add(file);
+                } else if (file.isDirectory()) {
+                    javaSourceFiles(file, files);
+                }
+            }
+        }
+    }
 }

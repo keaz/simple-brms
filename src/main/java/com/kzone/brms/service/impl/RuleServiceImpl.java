@@ -3,6 +3,7 @@ package com.kzone.brms.service.impl;
 import com.kzone.brms.dto.request.CreateDomainRequest;
 import com.kzone.brms.dto.request.CreateRuleSetRequest;
 import com.kzone.brms.dto.request.DomainObject;
+import com.kzone.brms.dto.request.UpdateRuleSetRequest;
 import com.kzone.brms.dto.response.CreateDomainResponse;
 import com.kzone.brms.dto.response.RuleSetResponse;
 import com.kzone.brms.exception.*;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 public class RuleServiceImpl implements RuleService {
 
     private static final String DEFAULT_VERSION = "/0.0.0";
+    public static final String CANNOT_FIND_THE_RULE_SET = "Cannot find the rule set";
 
     private final FileRepository fileRepository;
     private final JavaCompilerService compilerService;
@@ -58,7 +60,25 @@ public class RuleServiceImpl implements RuleService {
             fileRepository.deleteRuleSet(request.getRuleSetName());
             throw new CommonRuleCreateException(gitException.getMessage());
         }
-        return new RuleSetResponse(save.getId(), save.getName(), save.getDescription());
+        return new RuleSetResponse(save.getId(), save.getName(), save.getDescription(),save.getPackageName());
+    }
+
+    @Override
+    public RuleSetResponse updateRuleSet(String id,UpdateRuleSetRequest request) {
+        Optional<RuleSet> optional = ruleSetRepository.findById(id);
+        RuleSet ruleSet = optional.orElseThrow(() -> new RuleSetNotFoundException(CANNOT_FIND_THE_RULE_SET));
+
+        File sourceDirectory = fileRepository.getSourceDirectory(ruleSet.getName());
+        List<File> javaSourceFiles = fileRepository.getJavaSourceFiles(sourceDirectory);
+        //We don't allow to change package name when there is a java source file
+        if(!javaSourceFiles.isEmpty() && !ruleSet.getPackageName().equals(request.getPackageName())){
+            throw new RuleUpdateException("Cannot update package when having source files");
+        }
+        ruleSet.setDescription(request.getDescription());
+        ruleSet.setPackageName(request.getPackageName());
+        RuleSet save = ruleSetRepository.save(ruleSet);
+
+        return new RuleSetResponse(save.getId(), save.getName(), save.getDescription(),save.getPackageName());
     }
 
     private RuleSet convertToRuleSet(CreateRuleSetRequest request) {
@@ -69,33 +89,26 @@ public class RuleServiceImpl implements RuleService {
     public CreateDomainResponse createDomainObject(String ruleId, CreateDomainRequest request) {
         log.debug("Searching rule set from id {}", ruleId);
         Optional<RuleSet> optionalRuleSet = ruleSetRepository.findById(ruleId);
-        if (optionalRuleSet.isPresent()) {
-            log.debug("Rule set found for id {}", ruleId);
-            DomainObject domainObject = request.getDomainObject();
-            RuleSet ruleSet = optionalRuleSet.get();
-            String name = ruleSet.getName();
-            String packageName = ruleSet.getPackageName();
-            String sourceCode = sourceCodeService.createSourceCode(ruleSet, domainObject);
-            fileRepository.getWriteSource(name, packageName, domainObject.getName(), sourceCode);
-            gitRepository.commitAddPush(name, request.getMessage());
-            return new CreateDomainResponse(ruleId, name, domainObject.getName(), sourceCode);
-        }
-        log.debug("Cannot find rule set for id {} ", ruleId);
-        throw new RuleSetNotFoundException("Cannot find the rule set");
+        RuleSet ruleSet = optionalRuleSet.orElseThrow(() -> new RuleSetNotFoundException(CANNOT_FIND_THE_RULE_SET));
+
+        log.debug("Rule set found for id {}", ruleId);
+        DomainObject domainObject = request.getDomainObject();
+        String name = ruleSet.getName();
+        String packageName = ruleSet.getPackageName();
+        String sourceCode = sourceCodeService.createSourceCode(ruleSet, domainObject);
+        fileRepository.getWriteSource(name, packageName, domainObject.getName(), sourceCode);
+        gitRepository.commitAddPush(name, request.getMessage());
+        return new CreateDomainResponse(ruleId, name, domainObject.getName(), sourceCode);
     }
 
     @Override
     public void compileRuleSet(String ruleId) {
         Optional<RuleSet> optionalRuleSet = ruleSetRepository.findById(ruleId);
-        if (optionalRuleSet.isPresent()) {
-            RuleSet ruleSet = optionalRuleSet.get();
-            fileRepository.createClassDirectory(ruleSet.getName());
-            File sourceDirectory = fileRepository.getSourceDirectory(ruleSet.getName());
-            compilerService.compileRuleSets(sourceDirectory);
-            return;
-        }
-        log.debug("Cannot find rule set for id {} ", ruleId);
-        throw new RuleSetNotFoundException("Cannot find the rule set");
+        RuleSet ruleSet = optionalRuleSet.orElseThrow(() -> new RuleSetNotFoundException(CANNOT_FIND_THE_RULE_SET));
+        fileRepository.createClassDirectory(ruleSet.getName());
+        File sourceDirectory = fileRepository.getSourceDirectory(ruleSet.getName());
+        List<File> javaSourceFiles = fileRepository.getJavaSourceFiles(sourceDirectory);
+        compilerService.compileRuleSets(sourceDirectory,javaSourceFiles);
     }
 
     @Override
@@ -107,8 +120,14 @@ public class RuleServiceImpl implements RuleService {
         }
 
         return ruleSets.stream().map(ruleSet ->
-                new RuleSetResponse(ruleSet.getId(), ruleSet.getName(), ruleSet.getDescription())
+                new RuleSetResponse(ruleSet.getId(), ruleSet.getName(), ruleSet.getDescription(),ruleSet.getPackageName())
         ).collect(Collectors.toList());
     }
 
+    @Override
+    public RuleSetResponse getById(String id) {
+        Optional<RuleSet> optional = ruleSetRepository.findById(id);
+        RuleSet ruleSet = optional.orElseThrow(() -> new RuleSetNotFoundException(CANNOT_FIND_THE_RULE_SET));
+        return new RuleSetResponse(ruleSet.getId(), ruleSet.getName(), ruleSet.getDescription(),ruleSet.getPackageName());
+    }
 }

@@ -9,6 +9,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.tools.JavaCompiler;
 import java.io.File;
+import java.util.Collections;
 
 import static com.kzone.brms.service.JavaCompilerService.CLASS_DIR;
 
@@ -46,7 +47,7 @@ public class JavaCompilerServiceImplTests {
         Mockito.when(sourceFile.getName()).thenReturn("RuleDao.java");
         Mockito.when(sourceFile.getPath()).thenReturn("RuleDao.java");
         Mockito.when(javaCompiler.run(null,null,null,compilerArguments)).thenReturn(1);
-        compilerService.compileRuleSets(ruleSet);
+        compilerService.compileRuleSets(ruleSet, Collections.EMPTY_LIST);
     }
 
     @Test
@@ -57,7 +58,7 @@ public class JavaCompilerServiceImplTests {
         Mockito.when(sourceFile.getName()).thenReturn("RuleDao.java");
         Mockito.when(sourceFile.getPath()).thenReturn("RuleDao.java");
         Mockito.when(javaCompiler.run(null,null,null,compilerArguments)).thenReturn(0);
-        compilerService.compileRuleSets(ruleSet);
+        compilerService.compileRuleSets(ruleSet,Collections.EMPTY_LIST);
 
     }
 }
